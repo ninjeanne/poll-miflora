@@ -40,6 +40,13 @@ _BT_BACKEND = btlewrap.BluepyBackend
 # Configuration - The Bluetooth device to be used
 _BT_ADAPTER = "hci0"
 
+class UnfulfilledRequirementException(Exception):
+    """
+    Marker exception type to signal startup failure.
+    """
+
+    pass
+
 
 # Main entry point
 def main():
@@ -77,6 +84,7 @@ def __handle_exception(exception_type, exception_object, exception_traceback, th
     cause = exception_object.__cause__
     message = str(cause or exception_object)
     failsafe_message = "<unknown>" if not message else message
+    exit_code = -1
 
     if issubclass(exception_type, KeyboardInterrupt):
         log.info("Detected CTRL+C! Exiting...")
@@ -87,6 +95,9 @@ def __handle_exception(exception_type, exception_object, exception_traceback, th
             "Received Bluetooth error! Error was: '%s' Aborting...",
             failsafe_message
         )
+    elif issubclass(exception_type, UnfulfilledRequirementException):
+        log.error(failsafe_message)
+        exit_code = 1
     else:
         log.error(
             "Received exception '%s', error was : '%s'! Aborting...",
@@ -95,22 +106,18 @@ def __handle_exception(exception_type, exception_object, exception_traceback, th
         )
 
     log.info("=== POLL MIFLORA ABORTING ===")
-    exit(-1)
+    exit(exit_code)
 
 def _check_for_btle_backend_presence_or_abort():
     available_backends = btlewrap.available_backends()
     if _BT_BACKEND not in available_backends:
-        log.error("Bluetooth LE backend '%s' was unavailable! Exiting...", _BT_BACKEND.__name__)
-
-        log.info("=== POLL MIFLORA ABORTING ===")
-        exit(1)
+        raise UnfulfilledRequirementException("Bluetooth LE backend '%s' was unavailable! Exiting..." % (_BT_BACKEND.__name__))
 
 def _find_and_get_mac_address_of_miflora_peripheral() -> str:
     log.info("Scanning for %d seconds...", _SCAN_INTERVAL_IN_SECONDS)
     devices = miflora_scanner.scan(_BT_BACKEND, _SCAN_INTERVAL_IN_SECONDS)
     if len(devices) != 1:
-        log.error("Did not find exactly 1 Mi Flora peripheral, found %d instead! Exiting...")
-        exit(1)
+        raise UnfulfilledRequirementException("Did not find exactly 1 Mi Flora peripheral, found %d instead! Exiting..." % (len(devices)))
 
     mac_address = devices[0]
     log.info("Found MiFlora peripheral with MAC address '%s'.", mac_address)
