@@ -1,7 +1,7 @@
 import logging as log
 import sys
 import threading
-from datetime import datetime
+import time
 
 import btlewrap
 from miflora import miflora_scanner
@@ -61,10 +61,8 @@ def main():
 
     _receive_basic_statistics_for_peripheral(peripheral)
 
-    _register_peripheral_as_plant_in_backend(peripheral, _PLANT_NAME)
-
     polling_interval_in_seconds = _POLLING_INTERVAL_IN_MINUTES * 60
-    poller = MultiTimer(interval=polling_interval_in_seconds, function=_send_current_sensor_data, kwargs={'peripheral': peripheral})
+    poller = MultiTimer(interval=polling_interval_in_seconds, function=_send_current_sensor_data, kwargs={'mac_address': mac_address,'peripheral': peripheral})
     poller.start()
 
 def _configure_logger():
@@ -130,19 +128,7 @@ def _receive_basic_statistics_for_peripheral(peripheral: MiFloraPoller):
     battery_level = peripheral.battery_level()
     log.info("Mi Flora Firmware: %s, Battery Status: %s percent", firmware_version, battery_level)
 
-def _register_peripheral_as_plant_in_backend(peripheral: MiFloraPoller, plant_name: str):
-    log.info("Registering plant '%s' in backend...", plant_name)
-    response = requests.post(f"{_BACKEND_URL}/plant", json={
-        "name": str(plant_name),
-        "data": [],
-    })
-    log.debug(response.text)
-
-    response.raise_for_status()
-
-    log.info("Registration successful!")
-
-def _send_current_sensor_data(peripheral: MiFloraPoller):
+def _send_current_sensor_data(mac_address, peripheral: MiFloraPoller):
     log.info("Time's up! Fetching new sensor data...")
 
     temperature = peripheral.parameter_value(MI_TEMPERATURE)
@@ -151,16 +137,17 @@ def _send_current_sensor_data(peripheral: MiFloraPoller):
     conductivity = peripheral.parameter_value(MI_CONDUCTIVITY)
     battery_percentage = peripheral.parameter_value(MI_BATTERY)
 
-    current_time_iso8601 = datetime.now().astimezone().replace(microsecond=0).isoformat()
+    current_time_ms = int(time.time())*1000
 
-    log.info("Sending plant status for '%s'...", _PLANT_NAME)
-    response = requests.post(f"{_BACKEND_URL}/plant/{_PLANT_NAME}/sensor", json={
-        "dateAndTime" : str(current_time_iso8601),
+    log.info("Sending plant status for '%s' with time %s...", _PLANT_NAME, current_time_ms)
+    response = requests.post(f"{_BACKEND_URL}/sensor/{mac_address}", json={
+        "dateAndTime" : current_time_ms,
         "light": int(light),
         "temperature": float(temperature),
         "moisture": int(moisture),
         "conductivity": int(conductivity),
         "battery": int(battery_percentage),
+        "name": str("Ananas")
     })
 
     response.raise_for_status()
