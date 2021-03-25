@@ -7,8 +7,8 @@ You can find the code for the backend here: https://gitlab.com/plumeria1/smart-g
 ## Installation
 First you need to clone this repository and enter its directory.
 ```
-git clone git@gitlab.com:plumeria1/smart-garden-api.git
-cd smart-garden-api
+git clone https://gitlab.com/plumeria1/poll-miflora.git
+cd poll-miflora
 ```
 
 To start this script enter the following command
