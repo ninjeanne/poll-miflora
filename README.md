@@ -1,7 +1,7 @@
 # Custom Xiaomi Mi Flora Poller
 This poller is connecting to ONE nearby Mi Flora sensor, collecting its data and sending it to
 the backend currently running at jeanne.plumeria.tech.
-You can find the code for the backend here: https://gitlab.com/plumeria1/smart-garden-api
+You can find the code for the backend here: https://gitlab.com/plumeria1/poll-miflora
 
 
 ## Installation
@@ -13,6 +13,7 @@ cd poll-miflora
 
 To start this script enter the following command
 ```python3
+sudo pip3 install bluepy miflora blurry
 sudo python3 poll_miflora.py
 ```
 or install the attached systemd service
