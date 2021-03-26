@@ -61,7 +61,7 @@ def main():
     log.info("=====")
     log.info("Those are the mac addresses of all nearby sensors:")
     for mac_address in devices:
-      log.info("%s", mac_adress)
+      log.info("%s", mac_address)
     
     log.info("=====")
     
