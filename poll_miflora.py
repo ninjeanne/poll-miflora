@@ -57,7 +57,14 @@ def main():
     log.info("=== POLL MIFLORA STARTING (Backend: %s) ===", _BT_BACKEND.__name__)
 
     devices = _find_and_get_mac_addresses_of_miflora_peripheral()
-
+    
+    log.info("=====")
+    log.info("Those are the mac addresses of all nearby sensors:")
+    for mac_address in devices:
+      log.info("%s", mac_adress)
+    
+    log.info("=====")
+    
     for mac_address in devices:
       peripheral = MiFloraPoller(mac_address, _BT_BACKEND, adapter=_BT_ADAPTER)
 
@@ -136,7 +143,7 @@ def _send_current_sensor_data(mac_address, peripheral: MiFloraPoller):
 
     current_time_ms = int(time.time())*1000
 
-    log.info("Sending plant status for '%s' with time %s...", _PLANT_NAME, current_time_ms)
+    log.info("Sending plant status for %s %s with time %s...", _PLANT_NAME, mac_address, current_time_ms)
     response = requests.post(f"{_BACKEND_URL}/sensor/{mac_address}", json={
         "dateAndTime" : current_time_ms,
         "light": int(light),
@@ -144,7 +151,7 @@ def _send_current_sensor_data(mac_address, peripheral: MiFloraPoller):
         "moisture": int(moisture),
         "conductivity": int(conductivity),
         "battery": int(battery_percentage),
-        "name": str("Ananas")
+        "name": str(_PLANT_NAME)
     })
 
     response.raise_for_status()

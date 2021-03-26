@@ -8,7 +8,7 @@ User=root
 ExecStart=/usr/bin/python3 poll_miflora.py
 KillSignal=SIGINT
 SuccessExitStatus=130
-WorkingDirectory=/home/pi/bin
+WorkingDirectory=/home/pi/bin/poll_miflora
 Restart=on-failure
 RestartSec=30
 
