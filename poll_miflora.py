@@ -20,7 +20,7 @@ import requests
 
 
 # Configuration - Plant name reported to backend
-_PLANT_NAME = "Ananas"
+_PLANT_NAME = "Plumeria"
 
 # Configuration - Mi Flora polling interval in minutes
 _POLLING_INTERVAL_IN_MINUTES = 10
@@ -56,14 +56,16 @@ def main():
 
     log.info("=== POLL MIFLORA STARTING (Backend: %s) ===", _BT_BACKEND.__name__)
 
-    mac_address = _find_and_get_mac_address_of_miflora_peripheral()
-    peripheral = MiFloraPoller(mac_address, _BT_BACKEND, adapter=_BT_ADAPTER)
+    devices = _find_and_get_mac_addresses_of_miflora_peripheral()
 
-    _receive_basic_statistics_for_peripheral(peripheral)
+    for mac_address in devices:
+      peripheral = MiFloraPoller(mac_address, _BT_BACKEND, adapter=_BT_ADAPTER)
 
-    polling_interval_in_seconds = _POLLING_INTERVAL_IN_MINUTES * 60
-    poller = MultiTimer(interval=polling_interval_in_seconds, function=_send_current_sensor_data, kwargs={'mac_address': mac_address,'peripheral': peripheral})
-    poller.start()
+      _receive_basic_statistics_for_peripheral(peripheral)
+
+      polling_interval_in_seconds = _POLLING_INTERVAL_IN_MINUTES * 60
+      poller = MultiTimer(interval=polling_interval_in_seconds, function=_send_current_sensor_data, kwargs={'mac_address': mac_address,'peripheral': peripheral})
+      poller.start()
 
 def _configure_logger():
     log.basicConfig(level=_LOG_LEVEL)
@@ -111,16 +113,11 @@ def _check_for_btle_backend_presence_or_abort():
     if _BT_BACKEND not in available_backends:
         raise UnfulfilledRequirementException("Bluetooth LE backend '%s' was unavailable! Exiting..." % (_BT_BACKEND.__name__))
 
-def _find_and_get_mac_address_of_miflora_peripheral() -> str:
+def _find_and_get_mac_addresses_of_miflora_peripheral() -> str:
     log.info("Scanning for %d seconds...", _SCAN_INTERVAL_IN_SECONDS)
     devices = miflora_scanner.scan(_BT_BACKEND, _SCAN_INTERVAL_IN_SECONDS)
-    if len(devices) != 1:
-        raise UnfulfilledRequirementException("Did not find exactly 1 Mi Flora peripheral, found %d instead! Exiting..." % (len(devices)))
 
-    mac_address = devices[0]
-    log.info("Found MiFlora peripheral with MAC address '%s'.", mac_address)
-
-    return mac_address
+    return devices
 
 def _receive_basic_statistics_for_peripheral(peripheral: MiFloraPoller):
     log.info("Getting basic statistics about device...")

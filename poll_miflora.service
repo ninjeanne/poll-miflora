@@ -1,5 +1,6 @@
 [Unit]
 Description=Mi Flora Edge Device Software
+After=network.target
 
 [Service]
 Type=simple
@@ -8,6 +9,8 @@ ExecStart=/usr/bin/python3 poll_miflora.py
 KillSignal=SIGINT
 SuccessExitStatus=130
 WorkingDirectory=/home/pi/bin
+Restart=on-failure
+RestartSec=30
 
 [Install]
 WantedBy=multi-user.target
